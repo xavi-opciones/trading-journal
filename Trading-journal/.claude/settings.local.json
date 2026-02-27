@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create vite@latest . -- --template react)",
+      "Bash(npm install react react-dom react-router-dom @supabase/supabase-js recharts lucide-react date-fns)",
+      "Bash(npm install -D vite @vitejs/plugin-react)",
+      "Bash(npx vite build)",
+      "Bash(timeout 5 npx vite --host)",
+      "Bash(timeout 6 npx vite --port 5174)"
+    ]
+  }
+}
