@@ -5,7 +5,7 @@ import { isSupabaseConfigured } from '../lib/supabase'
 import { formatCurrency } from '../lib/format'
 
 export default function SettingsPage() {
-  const { baseCapital, setBaseCapital, trades, reload } = useTrades()
+  const { baseCapital, setBaseCapital, trades, reload, addTrade } = useTrades()
   const [capitalInput, setCapitalInput] = useState(String(baseCapital))
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -47,12 +47,20 @@ export default function SettingsPage() {
       try {
         const imported = JSON.parse(event.target.result)
         if (Array.isArray(imported)) {
-          // Save to localStorage as a batch
-          const existing = JSON.parse(localStorage.getItem('trading_journal_trades') || '[]')
-          const merged = [...imported, ...existing]
-          localStorage.setItem('trading_journal_trades', JSON.stringify(merged))
-          await reload()
-          alert(`Imported ${imported.length} trades successfully.`)
+          // Save imported trades to Supabase
+          let successCount = 0;
+          for (const trade of imported) {
+            try {
+              // We omit locally generated fields to avoid conflicts in Supabase
+              const { id, created_at, updated_at, ...cleanTrade } = trade;
+              await addTrade(cleanTrade);
+              successCount++;
+            } catch (tradeError) {
+              console.error('Error importing trade:', tradeError);
+            }
+          }
+          await reload();
+          alert(`Imported ${successCount} trades successfully.`);
         }
       } catch (err) {
         alert('Invalid JSON file.')
@@ -149,7 +157,7 @@ export default function SettingsPage() {
               color: 'var(--accent-green)',
               overflow: 'auto',
             }}>
-{`VITE_SUPABASE_URL=https://your-project.supabase.co
+              {`VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key`}
             </pre>
             <p style={{ marginTop: 8 }}>
